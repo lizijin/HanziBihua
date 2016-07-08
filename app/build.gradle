@@ -23,4 +23,11 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.3.0'
+
+    // https://mvnrepository.com/artifact/com.j256.ormlite/ormlite-core
+    compile group: 'com.j256.ormlite', name: 'ormlite-core', version: '4.48'
+
+    // https://mvnrepository.com/artifact/com.j256.ormlite/ormlite-android
+    compile group: 'com.j256.ormlite', name: 'ormlite-android', version: '4.48'
+
 }

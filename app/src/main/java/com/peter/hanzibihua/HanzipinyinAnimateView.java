@@ -37,7 +37,7 @@ public class HanzipinyinAnimateView extends View {
             } else {
                 invalidate();
 
-                handler.postDelayed(this, 10);
+                handler.postDelayed(this, 2);
             }
         }
     };
@@ -66,7 +66,7 @@ public class HanzipinyinAnimateView extends View {
     public void init() {
         paint.setColor(Color.BLUE);
         paint.setStyle(Paint.Style.FILL);
-        paint.setStrokeWidth(2);
+        paint.setStrokeWidth(6);
 //        PointFs = showData(data);
     }
 
@@ -136,8 +136,8 @@ public class HanzipinyinAnimateView extends View {
     }
 
     public PointF drawDot(double a, double b) {
-        double x = a / 9 + 5,
-                y = b / 9 + 5;
+        double x = a / 4 + 5,
+                y = b / 4 + 5;
         return new PointF((float) x, (float) y);
     }
 }
