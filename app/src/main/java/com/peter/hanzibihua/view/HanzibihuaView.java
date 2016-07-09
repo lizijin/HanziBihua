@@ -1,4 +1,4 @@
-package com.peter.hanzibihua;
+package com.peter.hanzibihua.view;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -11,6 +11,8 @@ import android.graphics.PointF;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
+
+import com.peter.hanzibihua.utils.BihuaParser;
 
 import java.util.ArrayList;
 
@@ -26,28 +28,30 @@ public class HanzibihuaView extends View {
 
     private ArrayList<Path> mPaths = new ArrayList<>();
 
+    private float mDensity;
+
     public HanzibihuaView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public HanzibihuaView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
     public HanzibihuaView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public HanzibihuaView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init();
+        init(context);
     }
 
-    public void init() {
+    public void init(Context context) {
         paint.setColor(Color.BLUE);
         paint.setStyle(Paint.Style.STROKE);
 
@@ -55,24 +59,26 @@ public class HanzibihuaView extends View {
         paint.setStrokeCap(Paint.Cap.ROUND);
 
         paint.setPathEffect(new CornerPathEffect(3));
+        mDensity = context.getResources().getDisplayMetrics().density;
 
 
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//        super.onMeasure(720, 1280);
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(720, 1280);
+        setMeasuredDimension((int)(100*mDensity), (int)(100*mDensity));
     }
+
+
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
         canvas.save();
-        canvas.translate(0,200);
-        canvas.scale(0.25f,0.25f);
+//        canvas.translate(0, 200);
+        canvas.scale(0.25f, 0.25f);
         try {
             for (Path path : mPaths) {
                 canvas.drawPath(path, paint);
@@ -95,14 +101,9 @@ public class HanzibihuaView extends View {
             for (int i = 0; i < pointFs.size(); i++) {
                 if (i == 0) {
                     path.moveTo(pointFs.get(i).x, pointFs.get(i).y);
-                }
-                else {
+                } else {
                     path.lineTo(pointFs.get(i).x, pointFs.get(i).y);
                 }
-
-//                drawLine(pointFs.get(i)
-// .x, pointFs.get(i).y,pointFs.get(i+1).x, pointFs.get(i+1).y,path);
-
 
             }
             mPaths.add(path);

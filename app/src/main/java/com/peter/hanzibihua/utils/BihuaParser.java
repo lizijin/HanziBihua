@@ -1,4 +1,4 @@
-package com.peter.hanzibihua;
+package com.peter.hanzibihua.utils;
 
 /**
  * Created by jiangbin on 16/7/6.
@@ -15,7 +15,7 @@ import java.util.ArrayList;
  */
 public class BihuaParser {
 
-    static class Bihua {
+    public static class Bihua {
         public String hanzi;
         public int bihuaCount;
         public String bihuaStep;

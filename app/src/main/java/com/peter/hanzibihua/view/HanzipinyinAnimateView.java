@@ -1,4 +1,4 @@
-package com.peter.hanzibihua;
+package com.peter.hanzibihua.view;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -41,39 +41,41 @@ public class HanzipinyinAnimateView extends View {
             }
         }
     };
+    private float mDensity;
 
     public HanzipinyinAnimateView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public HanzipinyinAnimateView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
     public HanzipinyinAnimateView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public HanzipinyinAnimateView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init();
+        init(context);
     }
 
-    public void init() {
+    public void init(Context context) {
         paint.setColor(Color.BLUE);
         paint.setStyle(Paint.Style.FILL);
         paint.setStrokeWidth(6);
+        mDensity = context.getResources().getDisplayMetrics().density;
 //        PointFs = showData(data);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(720, 1280);
+        setMeasuredDimension((int)(100*mDensity), (int) (100*mDensity));
     }
 
     @Override
@@ -81,7 +83,6 @@ public class HanzipinyinAnimateView extends View {
         super.onDraw(canvas);
         try {
             canvas.save();
-            canvas.translate(0, 200);
             int current = currentStep.get();
             for (int i = 0; i <= current; i++) {
                 ArrayList<PointF> arrayList2 = mPointFArray.get(i);
