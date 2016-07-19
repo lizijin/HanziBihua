@@ -1,7 +1,7 @@
 package com.peter.hanzibihua.activity;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,6 +27,11 @@ import com.peter.hanzibihua.view.HanzipinyinAnimateView;
 import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.List;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
     private Button mQueryButton;
@@ -73,8 +78,8 @@ public class MainActivity extends AppCompatActivity {
         mSpeakButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!TextUtils.isEmpty(mText))
-                ttsHelper.speek(mText);
+                if (!TextUtils.isEmpty(mText))
+                    ttsHelper.speek(mText);
             }
         });
         mChineseDatabaseHelper = ChineseDatabaseHelper.getHelper(this);
@@ -85,70 +90,95 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void query(String queryText) {
-        mText= queryText;
-        new QueryAnimationDbTask().execute(queryText);
-        new QueryDbTask().execute(queryText);
-//      startActivity(  new Intent(this,TtsDemo.class));
-//        ttsHelper.speek(queryText);
+    private void query(final String queryText) {
+        mText = queryText;
+        Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> subscriber) {
+                String s = queryAnimationFromDb(queryText);
+                subscriber.onNext(s);
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Subscriber<String>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(String s) {
+                mHanziAnimateView.setData(s);
+
+            }
+        });
+
+        Observable.create(new Observable.OnSubscribe<BihuaParser.Bihua>() {
+            @Override
+            public void call(Subscriber<? super BihuaParser.Bihua> subscriber) {
+                BihuaParser.Bihua bihua = queryBihuaFromDb(queryText);
+                subscriber.onNext(bihua);
+            }
+        }).subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<BihuaParser.Bihua>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(BihuaParser.Bihua bihua) {
+                        mHanzibihuaView.setBihua(bihua);
+                        mStepTextView.setText("一共" + bihua.bihuaStep.length() + "笔画");
+                        mChineseSpellStepAdapter.setBihua(bihua);
+                    }
+                });
     }
 
 
-    class QueryAnimationDbTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... params) {
+    @Nullable
+    private String queryAnimationFromDb(String param) {
+        try {
+            String query = param;
+            String encodeQuery = URLEncoder.encode(query).replace("%", "");
+            List<ChineseAnimation> list = mChineseAnimationDatabaseHelper.getChineseAnimationDao().queryForEq("ENCODE", encodeQuery);
+            if (list != null && list.size() != 0) {
+                Log.d("jiangbin", list.get(0).animation);
+                return list.get(0).animation;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    @Nullable
+    private BihuaParser.Bihua queryBihuaFromDb(String param) {
+        String query = param;
+        String encodeQuery = URLEncoder.encode(query).replace("%", "");
+        Dao dao = mChineseDatabaseHelper.getChineseDao();
+        if (dao != null) {
             try {
-                String query = params[0];
-                String encodeQuery = URLEncoder.encode(query).replace("%", "");
-                List<ChineseAnimation> list = mChineseAnimationDatabaseHelper.getChineseAnimationDao().queryForEq("ENCODE", encodeQuery);
+                List<Chinese> list = dao.queryForEq("ENCODE", encodeQuery);
                 if (list != null && list.size() != 0) {
-                    Log.d("jiangbin", list.get(0).animation);
-                    return list.get(0).animation;
+                    Log.d("jiangbin", list.get(0).points);
+                    return BihuaParser.convertFromChinese(list.get(0));
                 }
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
-            return null;
         }
-
-        @Override
-        protected void onPostExecute(String data) {
-            super.onPostExecute(data);
-            Log.d("jiangbin", data);
-            mHanziAnimateView.setData(data);
-
-        }
-    }
-
-
-    class QueryDbTask extends AsyncTask<String, Void, BihuaParser.Bihua> {
-        @Override
-        protected BihuaParser.Bihua doInBackground(String... params) {
-            String query = params[0];
-            String encodeQuery = URLEncoder.encode(query).replace("%", "");
-            Dao dao = mChineseDatabaseHelper.getChineseDao();
-            if (dao != null) {
-                try {
-                    List<Chinese> list = dao.queryForEq("ENCODE", encodeQuery);
-                    if (list != null && list.size() != 0) {
-                        Log.d("jiangbin", list.get(0).points);
-                        return BihuaParser.convertFromChinese(list.get(0));
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(BihuaParser.Bihua bihua) {
-            super.onPostExecute(bihua);
-            mHanzibihuaView.setBihua(bihua);
-            mStepTextView.setText("一共" + bihua.bihuaStep.length() + "笔画");
-            mChineseSpellStepAdapter.setBihua(bihua);
-        }
-
+        return null;
     }
 
     @Override
